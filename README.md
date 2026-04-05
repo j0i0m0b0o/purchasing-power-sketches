@@ -18,6 +18,8 @@ Comparing the winning threshold across sequential games normalized by final roun
 
 This does not measure purchasing power in a universal sense. Computational cost is at least anchored to physical reality, which may make it more stable than measuring against another token.
 
+The key thing to understand is this game is weird, and distorted. But the distortions and weirdness are scale-invariant. When nearly all the rest of crypto mechanism design breaks down under the weight of its own incentives at scale, scale-invariant weirdness is a very nice property.
+
 ## Open Questions / Comments
 
 - How to consume the signal?
