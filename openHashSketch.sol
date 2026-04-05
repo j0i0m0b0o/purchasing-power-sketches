@@ -3,10 +3,10 @@ pragma solidity 0.8.28;
 
 // a useful primitive for cryptoeconomics would be a game that resolves into a purchasing power signal, so we try to build one:
 
-/*  A game requester posts a fee to incentivize a purchasing power report. Reporters compete during a selection window by committing to hash thresholds. Lower thresholds win, meaning the reporter accepts being easier to
+/*  A game requester posts a fee to incentivize a purchasing power report. In the first phase, reporters compete during a selection window by committing to hash thresholds. Lower thresholds win, meaning the reporter accepts being easier to
   challenge. The winning reporter reveals a seed, which starts the breaking game: anyone can try to break the reporter by finding a nonce that, combined with their address and the seed, hashes above the threshold. If broken,
   the reporter loses their posted liquidity, the escalated fee is retained and the remainder goes to the breaker, then a new selection round begins with escalated fee and liquidity requirements. If the reporter never reveals
-  their seed, anyone can trigger escalation, and the reporter gets back their liquidity minus the escalated fee. Alternatively, a reporter can be replaced during the breaking game by posting a sufficiently lower threshold along
+  their seed, anyone can trigger escalation, and the reporter gets back their liquidity minus the escalated fee, which funds the next larger selection round. Alternatively, a reporter can be replaced during the breaking game by posting a sufficiently lower threshold along
    with a premium payment to the incumbent, which refreshes the settlement window. If nobody breaks or replaces the reporter before the settlement window expires, the report stands and the reporter earns the fee plus their liquidity back. Escalation is capped at a
   configurable halt point.
 
