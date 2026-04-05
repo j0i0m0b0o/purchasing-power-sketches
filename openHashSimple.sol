@@ -67,6 +67,7 @@ contract openHash2 {
 
     function report(uint256 gameId, bytes32 threshold, bytes32 seed) payable external {
         HashGame storage h = hashGame[gameId];
+        if (gameId == 0 || gameId >= nextGameId) revert InvalidInput("game does not exist");
         if (h.breakingGameActive) revert InvalidInput("breaking game active");
         if (h.finished) revert InvalidInput("finished");
         if (msg.value != h.currentLiquidity) revert InvalidInput("msg.value wrong");
