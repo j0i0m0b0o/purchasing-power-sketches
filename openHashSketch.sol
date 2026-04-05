@@ -87,6 +87,7 @@ contract openHash {
         if (msg.value != gameParams.fee) revert InvalidInput("msg.value");
         if (gameParams.multiplier <= 100) revert InvalidInput("multiplier must exceed 100");
         if (gameParams.escalationHalt <= gameParams.initialLiquidity) revert InvalidInput("escalation halt must exceed initial liquidity");
+        if (gameParams.replacementDecay >= 10000) revert InvalidInput("replacement decay must be below 10000");
         if (gameParams.initialLiquidity < gameParams.fee * (gameParams.multiplier - 100) / 100) revert InvalidInput("liquidity must cover fee delta");
         uint256 gameId = nextGameId++;
         HashGame storage h = hashGame[gameId];
