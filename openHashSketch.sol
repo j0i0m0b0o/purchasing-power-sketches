@@ -20,7 +20,6 @@ contract openHash {
     error InvalidInput(string);
 
     mapping (uint256 => HashGame) hashGame;
-    mapping (address => uint96) balances;
     mapping (address => uint256) tempHolding;
 
     struct HashGame {
@@ -75,6 +74,8 @@ contract openHash {
 
     function requestGame(GameParams memory gameParams) payable external {
         if (msg.value != gameParams.fee) revert InvalidInput("msg.value");
+        if (gameParams.multiplier <= 100) revert InvalidInput("multiplier must exceed 100");
+        if (gameParams.initialLiquidity < gameParams.fee * gameParams.multiplier / 100) revert InvalidInput("liquidity must cover escalated fee");
         uint256 gameId = nextGameId++;
         HashGame storage h = hashGame[gameId];
 
@@ -158,9 +159,17 @@ contract openHash {
         if (h.selectionReporter == address(0)) revert InvalidInput("no selection reporter");
 
         if (h.initialReporterSelectionActive && h.seedRevealTime < (h.timeType ? block.timestamp : block.number)) {
-            // need escalation halt semantics eventually
-            h.fee = h.multiplier * h.fee / 100;
-            h.currentLiquidity = h.currentLiquidity * h.multiplier / 100;
+            if (h.initialLiquidity == h.currentLiquidity) {
+                _sendEth(payable(h.protocolFeeRecipient), h.fee);
+            }
+            uint96 nextLiquidity = h.currentLiquidity * h.multiplier / 100;
+            if (nextLiquidity > h.escalationHalt) {
+                h.fee = h.fee * h.escalationHalt / h.currentLiquidity;
+                h.currentLiquidity = h.escalationHalt;
+            } else {
+                h.fee = h.multiplier * h.fee / 100;
+                h.currentLiquidity = nextLiquidity;
+            }
 
             //obviously need to prevent underflow in the game creation revert checks
             uint256 remainder = h.selectionBalance - h.fee;
@@ -190,9 +199,17 @@ contract openHash {
         bytes32 hash = keccak256(abi.encode(nonce, msg.sender, h.breakGameSeed));
 
         if (uint256(hash) > uint256(h.breakGameThreshold)) {
-            //need escalation halt semantics eventually
-            h.fee = h.multiplier * h.fee / 100;
-            h.currentLiquidity = h.currentLiquidity * h.multiplier / 100;
+            if (h.initialLiquidity == h.currentLiquidity) {
+                _sendEth(payable(h.protocolFeeRecipient), h.fee);
+            }
+            uint96 nextLiquidity = h.currentLiquidity * h.multiplier / 100;
+            if (nextLiquidity > h.escalationHalt) {
+                h.fee = h.fee * h.escalationHalt / h.currentLiquidity;
+                h.currentLiquidity = h.escalationHalt;
+            } else {
+                h.fee = h.multiplier * h.fee / 100;
+                h.currentLiquidity = nextLiquidity;
+            }
             //need underflow protection in game creation
             uint256 remainder = h.breakGameBalance - h.fee;
             _sendEth(payable(msg.sender), remainder);
@@ -238,7 +255,7 @@ contract openHash {
         if (h.finished) revert InvalidInput("finished");
         if (h.initialReporterSelectionActive) revert InvalidInput("selection active");
         uint256 currentTime = h.timeType ? block.timestamp : block.number;
-        if (currentTime <= h.settlementTime + h.reportTimestamp) revert InvalidInput("break time over");
+        if (currentTime <= h.settlementTime + h.reportTimestamp) revert InvalidInput("settlement time not reached");
 
         _sendEth(payable(h.breakGameReporter), h.currentLiquidity + h.fee);
         h.finished = true;
@@ -255,6 +272,14 @@ contract openHash {
         if (!success) {
             tempHolding[recipient] += amount;
         }
+    }
+
+    function getTempHolding() external {
+        uint256 amount = tempHolding[msg.sender];
+        if (amount == 0) revert InvalidInput("no balance");
+        tempHolding[msg.sender] = 0;
+        (bool success,) = payable(msg.sender).call{value: amount}("");
+        if (!success) revert InvalidInput("transfer failed");
     }
 
 }
