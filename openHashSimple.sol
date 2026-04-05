@@ -49,7 +49,7 @@ contract openHash2 {
         if (msg.value != gameParams.fee) revert InvalidInput("msg.value");
         if (gameParams.multiplier <= 100) revert InvalidInput("multiplier must exceed 100");
         if (gameParams.escalationHalt <= gameParams.initialLiquidity) revert InvalidInput("escalation halt must exceed initial liquidity");
-        if (gameParams.initialLiquidity < gameParams.fee * gameParams.multiplier / 100) revert InvalidInput("liquidity must cover escalated fee");
+        if (gameParams.initialLiquidity < gameParams.fee * (gameParams.multiplier - 100) / 100) revert InvalidInput("liquidity must cover fee delta");
         uint256 gameId = nextGameId++;
         HashGame storage h = hashGame[gameId];
 
@@ -93,9 +93,7 @@ contract openHash2 {
         bytes32 hash = keccak256(abi.encode(nonce, msg.sender, h.breakGameSeed));
 
         if (uint256(hash) > uint256(h.breakGameThreshold)) {
-            if (h.initialLiquidity == h.currentLiquidity) {
-                _sendEth(payable(h.protocolFeeRecipient), h.fee);
-            }
+            uint96 oldFee = h.fee;
             uint96 nextLiquidity = h.currentLiquidity * h.multiplier / 100;
             if (nextLiquidity > h.escalationHalt) {
                 h.fee = h.fee * h.escalationHalt / h.currentLiquidity;
@@ -104,16 +102,16 @@ contract openHash2 {
                 h.fee = h.multiplier * h.fee / 100;
                 h.currentLiquidity = nextLiquidity;
             }
-            uint256 remainder = h.breakGameBalance - h.fee;
-            _sendEth(payable(msg.sender), remainder);
+            uint256 remainder = h.breakGameBalance - (h.fee - oldFee);
 
             h.breakingGameActive = false;
-
             h.breakGameReporter = address(0);
             h.breakGameThreshold = bytes32(0);
             h.breakGameSeed = bytes32(0);
             h.breakGameBalance = 0;
             h.reportTimestamp = 0;
+
+            _sendEth(payable(msg.sender), remainder);
         } else {
             revert InvalidInput("hash below threshold");
         }
@@ -130,13 +128,16 @@ contract openHash2 {
         if (uint256(threshold) >= h.replacementDecay * uint256(h.breakGameThreshold) / 10000) revert InvalidInput("minimum replacement increment");
         if (msg.value != h.currentLiquidity) revert InvalidInput("msg.value wrong");
 
-        _sendEth(payable(h.breakGameReporter), h.breakGameBalance);
+        address payable previousReporter = payable(h.breakGameReporter);
+        uint256 previousBalance = h.breakGameBalance;
 
         h.reportTimestamp = currentTime;
         h.breakGameReporter = msg.sender;
         h.breakGameThreshold = threshold;
         h.breakGameSeed = seed;
         h.breakGameBalance = msg.value;
+
+        _sendEth(previousReporter, previousBalance);
     }
 
     function settle(uint256 gameId) external {
@@ -146,9 +147,11 @@ contract openHash2 {
         uint256 currentTime = h.timeType ? block.timestamp : block.number;
         if (currentTime <= h.settlementTime + h.reportTimestamp) revert InvalidInput("settlement time not reached");
 
-        _sendEth(payable(h.breakGameReporter), h.currentLiquidity + h.fee);
+        address payable reporter = payable(h.breakGameReporter);
+        uint256 payout = h.currentLiquidity + h.fee;
         h.finished = true;
         h.breakingGameActive = false;
+        _sendEth(reporter, payout);
     }
 
     /**

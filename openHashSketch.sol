@@ -87,7 +87,7 @@ contract openHash {
         if (msg.value != gameParams.fee) revert InvalidInput("msg.value");
         if (gameParams.multiplier <= 100) revert InvalidInput("multiplier must exceed 100");
         if (gameParams.escalationHalt <= gameParams.initialLiquidity) revert InvalidInput("escalation halt must exceed initial liquidity");
-        if (gameParams.initialLiquidity < gameParams.fee * gameParams.multiplier / 100) revert InvalidInput("liquidity must cover escalated fee");
+        if (gameParams.initialLiquidity < gameParams.fee * (gameParams.multiplier - 100) / 100) revert InvalidInput("liquidity must cover fee delta");
         uint256 gameId = nextGameId++;
         HashGame storage h = hashGame[gameId];
 
@@ -121,13 +121,16 @@ contract openHash {
         uint256 currentTime = h.timeType ? block.timestamp : block.number;
         if (h.selectionTime != 0 && currentTime > h.selectionTime) revert InvalidInput("selection time over");
 
-        if (h.selectionReporter != address(0)) {
-            _sendEth(payable(h.selectionReporter), h.selectionBalance);
-        }
+        address payable previousReporter = payable(h.selectionReporter);
+        uint256 previousBalance = h.selectionBalance;
 
         h.selectionBalance = msg.value;
         h.selectionThreshold = threshold;
         h.selectionReporter = msg.sender;
+
+        if (previousReporter != address(0)) {
+            _sendEth(previousReporter, previousBalance);
+        }
         
         if (h.selectionTime == 0) {
         h.selectionTime = h.selectionWindow + currentTime;
@@ -171,9 +174,7 @@ contract openHash {
         if (h.selectionReporter == address(0)) revert InvalidInput("no selection reporter");
 
         if (h.initialReporterSelectionActive && h.seedRevealTime < (h.timeType ? block.timestamp : block.number)) {
-            if (h.initialLiquidity == h.currentLiquidity) {
-                _sendEth(payable(h.protocolFeeRecipient), h.fee);
-            }
+            uint96 oldFee = h.fee;
             uint96 nextLiquidity = h.currentLiquidity * h.multiplier / 100;
             if (nextLiquidity > h.escalationHalt) {
                 h.fee = h.fee * h.escalationHalt / h.currentLiquidity;
@@ -183,17 +184,16 @@ contract openHash {
                 h.currentLiquidity = nextLiquidity;
             }
 
-            //obviously need to prevent underflow in the game creation revert checks
-            uint256 remainder = h.selectionBalance - h.fee;
-            _sendEth(payable(h.selectionReporter), remainder);
+            uint256 remainder = h.selectionBalance - (h.fee - oldFee);
+            address payable reporter = payable(h.selectionReporter);
 
             h.selectionTime = 0;
             h.seedRevealTime = 0;
-
-            //zero out everything else
             h.selectionReporter = address(0);
             h.selectionThreshold = bytes32(0);
             h.selectionBalance = 0;
+
+            _sendEth(reporter, remainder);
         } else {
             revert InvalidInput("ineligible");
         }
@@ -211,9 +211,7 @@ contract openHash {
         bytes32 hash = keccak256(abi.encode(nonce, msg.sender, h.breakGameSeed));
 
         if (uint256(hash) > uint256(h.breakGameThreshold)) {
-            if (h.initialLiquidity == h.currentLiquidity) {
-                _sendEth(payable(h.protocolFeeRecipient), h.fee);
-            }
+            uint96 oldFee = h.fee;
             uint96 nextLiquidity = h.currentLiquidity * h.multiplier / 100;
             if (nextLiquidity > h.escalationHalt) {
                 h.fee = h.fee * h.escalationHalt / h.currentLiquidity;
@@ -222,19 +220,17 @@ contract openHash {
                 h.fee = h.multiplier * h.fee / 100;
                 h.currentLiquidity = nextLiquidity;
             }
-            //need underflow protection in game creation
-            uint256 remainder = h.breakGameBalance - h.fee;
-            _sendEth(payable(msg.sender), remainder);
+            uint256 remainder = h.breakGameBalance - (h.fee - oldFee);
 
             h.breakingGameActive = false;
             h.initialReporterSelectionActive = true;
-
-            //zero out everything else
             h.breakGameReporter = address(0);
             h.breakGameThreshold = bytes32(0);
             h.breakGameSeed = bytes32(0);
             h.breakGameBalance = 0;
             h.reportTimestamp = 0;
+
+            _sendEth(payable(msg.sender), remainder);
         } else {
             revert InvalidInput("hash below threshold");
         }
@@ -253,12 +249,14 @@ contract openHash {
         uint256 transferReq = h.currentLiquidity + h.currentLiquidity * h.replacementPayoutFraction / 10000;
         if (msg.value != transferReq) revert InvalidInput("didnt transfer enough");
 
-        _sendEth(payable(h.breakGameReporter), msg.value);
+        address payable previousReporter = payable(h.breakGameReporter);
 
         h.reportTimestamp = currentTime;
         h.breakGameReporter = msg.sender;
         h.breakGameThreshold = threshold;
         h.breakGameSeed = seed;
+
+        _sendEth(previousReporter, msg.value);
     }
 
     function settle(uint256 gameId) external {
@@ -269,9 +267,11 @@ contract openHash {
         uint256 currentTime = h.timeType ? block.timestamp : block.number;
         if (currentTime <= h.settlementTime + h.reportTimestamp) revert InvalidInput("settlement time not reached");
 
-        _sendEth(payable(h.breakGameReporter), h.currentLiquidity + h.fee);
+        address payable reporter = payable(h.breakGameReporter);
+        uint256 payout = h.currentLiquidity + h.fee;
         h.finished = true;
         h.breakingGameActive = false;
+        _sendEth(reporter, payout);
     }
 
     /**
