@@ -86,6 +86,7 @@ contract openHash {
     function requestGame(GameParams memory gameParams) payable external {
         if (msg.value != gameParams.fee) revert InvalidInput("msg.value");
         if (gameParams.multiplier <= 100) revert InvalidInput("multiplier must exceed 100");
+        if (gameParams.escalationHalt <= gameParams.initialLiquidity) revert InvalidInput("escalation halt must exceed initial liquidity");
         if (gameParams.initialLiquidity < gameParams.fee * gameParams.multiplier / 100) revert InvalidInput("liquidity must cover escalated fee");
         uint256 gameId = nextGameId++;
         HashGame storage h = hashGame[gameId];
