@@ -23,6 +23,7 @@ contract openHash2 {
         address breakGameReporter;
         bytes32 breakGameThreshold;
         bytes32 breakGameSeed;
+        bytes32 reportBlockhash;
         bool timeType;
         bool breakingGameActive;
         bool finished;
@@ -81,6 +82,7 @@ contract openHash2 {
         h.breakGameThreshold = threshold;
         h.breakGameBalance = msg.value;
         h.reportTimestamp = currentTime;
+        h.reportBlockhash = blockhash(block.number - 1);
     }
 
     function breakReporter(uint256 gameId, uint256 nonce) external {
@@ -91,7 +93,7 @@ contract openHash2 {
         uint256 currentTime = h.timeType ? block.timestamp : block.number;
         if (currentTime > h.settlementTime + h.reportTimestamp) revert InvalidInput("break time over");
 
-        bytes32 hash = keccak256(abi.encode(nonce, msg.sender, h.breakGameSeed));
+        bytes32 hash = keccak256(abi.encode(nonce, msg.sender, h.breakGameSeed, h.reportBlockhash));
 
         if (uint256(hash) > uint256(h.breakGameThreshold)) {
             uint96 oldFee = h.fee;
@@ -111,6 +113,7 @@ contract openHash2 {
             h.breakGameSeed = bytes32(0);
             h.breakGameBalance = 0;
             h.reportTimestamp = 0;
+            h.reportBlockhash = bytes32(0);
 
             _sendEth(payable(msg.sender), remainder);
         } else {
@@ -137,6 +140,7 @@ contract openHash2 {
         h.breakGameThreshold = threshold;
         h.breakGameSeed = seed;
         h.breakGameBalance = msg.value;
+        h.reportBlockhash = blockhash(block.number - 1);
 
         _sendEth(previousReporter, previousBalance);
     }
