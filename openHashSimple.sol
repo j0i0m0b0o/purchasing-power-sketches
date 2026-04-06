@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 /**
  * @title openHash
- * @notice A trust-minimized hash price oracle
+ * @notice A trust-minimized hash price oracle. It is a minimal reality-coupled game where the weirdness and distortions are ~ scale-invariant unlike many other oracle designs.
  * @dev This contract enables hash price discovery through economic incentives.
  *      Intended use is to compare the final surviving threshold, normalized by liquidity, across two games with otherwise equivalent GameParams.
  *      Participants are responsible for validating game instance parameters before participation
