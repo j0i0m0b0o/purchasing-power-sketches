@@ -7,8 +7,8 @@ contract openHash2 {
 
     error InvalidInput(string);
 
-    mapping (uint256 => HashGame) hashGame;
-    mapping (address => uint256) tempHolding;
+    mapping (uint256 => HashGame) public hashGame;
+    mapping (address => uint256) public tempHolding;
 
     struct HashGame {
         address protocolFeeRecipient;
@@ -97,12 +97,12 @@ contract openHash2 {
 
         if (uint256(hash) > uint256(h.breakGameThreshold)) {
             uint96 oldFee = h.fee;
-            uint96 nextLiquidity = h.currentLiquidity * h.multiplier / 100;
+            uint96 nextLiquidity = uint96(uint256(h.currentLiquidity) * h.multiplier / 100);
             if (nextLiquidity > h.escalationHalt) {
-                h.fee = h.fee * h.escalationHalt / h.currentLiquidity;
+                h.fee = uint96(uint256(h.fee) * h.escalationHalt / h.currentLiquidity);
                 h.currentLiquidity = h.escalationHalt;
             } else {
-                h.fee = h.multiplier * h.fee / 100;
+                h.fee = uint96(uint256(h.fee) * h.multiplier / 100);
                 h.currentLiquidity = nextLiquidity;
             }
             uint256 remainder = h.breakGameBalance - (h.fee - oldFee);
@@ -129,7 +129,7 @@ contract openHash2 {
         uint256 currentTime = h.timeType ? block.timestamp : block.number;
         if (currentTime > h.settlementTime + h.reportTimestamp) revert InvalidInput("break time over");
 
-        if (uint256(threshold) >= h.replacementDecay * uint256(h.breakGameThreshold) / 10000) revert InvalidInput("minimum replacement increment");
+        if (uint256(threshold) >= h.replacementDecay * (uint256(h.breakGameThreshold) / 10000)) revert InvalidInput("minimum replacement increment");
         if (msg.value != h.currentLiquidity) revert InvalidInput("msg.value wrong");
 
         address payable previousReporter = payable(h.breakGameReporter);
