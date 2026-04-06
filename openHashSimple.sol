@@ -23,7 +23,6 @@ contract openHash {
 
     struct HashGame {
         bytes32 threshold;
-        bytes32 seed;
         bytes32 blockHash;
 
         address protocolFeeRecipient;
@@ -57,9 +56,9 @@ contract openHash {
     }
 
     event GameCreated(uint256 indexed gameId, address indexed requester, GameParams gameParams);                                                                                                                                     
-    event InitialReport(uint256 indexed gameId, address indexed reporter, bytes32 threshold, bytes32 seed);
+    event InitialReport(uint256 indexed gameId, address indexed reporter, bytes32 threshold);
     event ReportBroken(uint256 indexed gameId, address indexed breaker, uint96 newLiquidity, uint96 newReward);
-    event ReportReplaced(uint256 indexed gameId, address indexed newReporter, address indexed previousReporter, bytes32 threshold, bytes32 seed);
+    event ReportReplaced(uint256 indexed gameId, address indexed newReporter, address indexed previousReporter, bytes32 threshold);
     event ReportSettled(uint256 indexed gameId, address indexed reporter, uint96 liquidity, bytes32 threshold);
 
     function requestGame(GameParams memory gameParams) payable external {
@@ -89,7 +88,7 @@ contract openHash {
         emit GameCreated(gameId, msg.sender, gameParams);
     }
 
-    function report(uint256 gameId, bytes32 threshold, bytes32 seed) payable external {
+    function report(uint256 gameId, bytes32 threshold) payable external {
         HashGame storage h = hashGame[gameId];
         if (gameId == 0 || gameId >= nextGameId) revert InvalidInput("game does not exist");
         if (h.active) revert InvalidInput("breaking game active");
@@ -99,13 +98,12 @@ contract openHash {
         uint256 currentTime = h.timeType ? block.timestamp : block.number;
 
         h.active = true;
-        h.seed = seed;
         h.reporter = msg.sender;
         h.threshold = threshold;
         h.reportTimestamp = uint48(currentTime);
         h.blockHash = blockhash(block.number - 1);
 
-        emit InitialReport(gameId, msg.sender, threshold, seed);
+        emit InitialReport(gameId, msg.sender, threshold);
     }
 
     function breakReporter(uint256 gameId, uint256 nonce) external {
@@ -116,7 +114,7 @@ contract openHash {
         uint256 currentTime = h.timeType ? block.timestamp : block.number;
         if (currentTime > h.settlementTime + h.reportTimestamp) revert InvalidInput("break time over");
 
-        bytes32 hash = keccak256(abi.encode(nonce, msg.sender, h.seed, h.blockHash));
+        bytes32 hash = keccak256(abi.encode(nonce, msg.sender, gameId, h.blockHash));
 
         if (uint256(hash) > uint256(h.threshold)) {
             uint96 oldFee = h.reward;
@@ -136,7 +134,6 @@ contract openHash {
             h.active = false;
             h.reporter = address(0);
             h.threshold = bytes32(0);
-            h.seed = bytes32(0);
             h.reportTimestamp = 0;
             h.blockHash = bytes32(0);
 
@@ -149,7 +146,7 @@ contract openHash {
         }
     }
 
-    function replaceReporter(uint256 gameId, bytes32 threshold, bytes32 seed) external payable {
+    function replaceReporter(uint256 gameId, bytes32 threshold) external payable {
         HashGame storage h = hashGame[gameId];
         if (!h.active) revert InvalidInput("not active");
         if (h.finished) revert InvalidInput("finished");
@@ -166,12 +163,12 @@ contract openHash {
         h.reportTimestamp = uint48(currentTime);
         h.reporter = msg.sender;
         h.threshold = threshold;
-        h.seed = seed;
-        h.blockHash = blockhash(block.number - 1);
+        // blockHash intentionally not refreshed: keeps any pending honest break
+        // valid against the new (lower) threshold, killing the self-replace dodge.
 
         _sendEth(previousReporter, previousBalance);
 
-        emit ReportReplaced(gameId, msg.sender, previousReporter, threshold, seed);
+        emit ReportReplaced(gameId, msg.sender, previousReporter, threshold);
     }
 
     function settle(uint256 gameId) external {
