@@ -17,11 +17,11 @@ The key thing to understand is this game is weird, and distorted. But the distor
 The question then is: can any mechanism produce a purchasing power signal better than this one at scale? If so, then show it. If a better mechanism cannot be found, then this is what the universe gives us given the irreducible geometry of the problem, and we have to engineer around the weirdness.
 
 ## Open Questions / Comments
-
 - How to consume the signal?
 - How do censorship / block producer games factor in? Tightly coupled to how the signal is consumed.
 - Does griefing completely kill honest tight reporting incentives / result in an equilibrium honest threshold that is manipulable? Is there a better way to do the forced succession in this context?
 - On the other hand, nobody can know if they were griefed or someone just got lucky without enough statistical evidence
 - Manipulability is measured in the context of how the signal is consumed
+- Does avoiding breaks by self-replace front running kill the mechanism? Or distort it too much?
 
 Overall, the purpose of this mechanism is not a perfect CPI oracle. We just want at least some tendril of reality, however messy, around which we can engineer.
