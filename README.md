@@ -6,6 +6,14 @@ A game requester posts a fee to incentivize a purchasing power report. Anyone ca
 
 If broken, the reporter loses their posted liquidity, the escalated fee is retained and the remainder goes to the breaker, then a new round begins with escalated fee and liquidity requirements with a fresh timer. If nobody breaks or replaces the reporter before the settlement window expires, the report stands and the reporter earns the fee plus their liquidity back. Escalation is capped at a configurable halt point. Any replacements reset the game timer.
 
+## openHashClaim.sol
+
+One source of distortion in openHashSimple is that breakers attempting to break a report don't know how many others are working on the same problem at the same time. A small probability of competition can push expected value negative when compute cost is a meaningful fraction of the prize. Rational breakers refuse to attempt unless they're confident they're solo, which introduces systematic under-participation. Reporters anticipate this and post thresholds lower than the true compute-vs-ETH indifference point, because they know the effective break rate from honest breakers is dampened by uncertainty. The settled threshold ends up reflecting the hidden composition of the active miner population at game time, which is an extra source of variance that isn't measuring anything about ETH's purchasing power versus compute.
+
+openHashClaim.sol adds an optional claim layer on top of the base game. A breaker stakes a wager equal to the next round's reward escalation delta to lock exclusive break access for the remainder of the current settlement window. While a claim is active, only the claimer can break, and replacement and settlement are blocked. If the claimer successfully breaks, the wager is returned as part of the break payout. If they fail to break before the window expires, anyone can call newRound: the reporter gets their liquidity back, the wager funds the escalation of the next round's reward, and a new round begins at the escalated level. At the escalation halt where there is nothing to escalate to, the wager routes to the protocol fee recipient instead. The race path from openHashSimple remains available when no claim is active.
+
+Under the claim path the breaker's expected value improves because they know they have exclusive access.
+
 ## Signal
 
 Comparing the winning threshold across sequential games normalized by final round size gives a signal about how ETH's purchasing power changed over the interval, measured against computational cost. If the winning threshold rises from one game to the next, that suggests market participants were willing to burn more real world compute to win the staked ETH, implying stronger ETH purchasing power versus compute. If it falls, that suggests weaker purchasing power.
