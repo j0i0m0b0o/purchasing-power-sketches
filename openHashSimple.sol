@@ -69,6 +69,8 @@ contract openHash {
         if (gameParams.replacementDecay >= 10000) revert InvalidInput("replacement decay must be below 10000");
         if (gameParams.initialLiquidity < gameParams.fee * (gameParams.multiplier - 100) / 100) revert InvalidInput("liquidity must cover fee delta");
         if (gameParams.protocolFee > 1e7) revert InvalidInput("protocol fee too high");
+        if (uint256(gameParams.escalationHalt) * gameParams.multiplier / 100 > type(uint96).max) revert InvalidInput("liquidity would overflow");
+        if ((uint256(gameParams.fee) * gameParams.escalationHalt / gameParams.initialLiquidity) * gameParams.multiplier / 100 > type(uint96).max) revert InvalidInput("reward would overflow");
 
         uint256 gameId = nextGameId++;
         HashGame storage h = hashGame[gameId];
