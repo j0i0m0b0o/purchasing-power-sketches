@@ -2,9 +2,13 @@ A useful primitive for cryptoeconomics would be a game that resolves into a purc
 
 ## openHashSimple.sol
 
-A game requester posts a reward to incentivize a purchasing power report. Anyone can report by posting a threshold and liquidity, which immediately starts the breaking game: anyone can try to break the reporter by finding a nonce that, combined with their address, the gameId, and the parent block hash captured at report time, hashes above the threshold. A reporter can also be replaced during the breaking game by posting a sufficiently lower threshold (governed by a replacement decay parameter), which returns the incumbent's liquidity and refreshes the settlement timer.
+A game requester posts a reward to incentivize a purchasing power report. Anyone can report by posting a threshold and liquidity, which immediately starts the breaking game: anyone can try to break the reporter by finding a nonce that, combined with their address, the gameId, and the parent block hash captured at report time, hashes above the threshold.
 
-Upon break, part of the reporter's liquidity is used to fund the next game round's reward, governed by the multiplier. Both the next round's reward and liquidity are increased proportionally. The game ends when the timer expires, with the current reporter earning the reward.
+Upon break, part of that reporter's liquidity is used to fund the next round's reward, while the remainder goes to the breaker. The multiplier governs how much the next round's reward and liquidity increase.
+
+A reporter can also be replaced during the breaking game if someone posts a sufficiently lower threshold (governed by a replacement decay parameter), which returns the incumbent's liquidity and refreshes the settlement timer.
+
+The game ends when the timer expires. The surviving reporter earns the reward.
 
 ## Signal
 
@@ -12,7 +16,7 @@ Comparing the winning threshold across sequential games normalized by final roun
 
 This does not measure purchasing power in a universal sense. Computational cost is at least anchored to physical reality, which may make it more stable than measuring against another token.
 
-The key thing to understand is this game is weird and distorted. But the distortions and weirdness are scale-invariant. When nearly all the rest of crypto mechanism design breaks down under the weight of its own incentives at scale, scale-invariant weirdness is a very nice property.
+The key thing to understand is this game is weird and distorted. But the distortions and weirdness are ~scale-invariant. When nearly all the rest of crypto mechanism design breaks down under the weight of its own incentives at scale, scale-invariant weirdness is a very nice property.
 
 The question then is: can any mechanism produce a purchasing power signal better than this one at scale? If so, then show it. If a better mechanism cannot be found, then this is what the universe gives us given the irreducible geometry of the problem, and we have to engineer around the weirdness.
 
