@@ -117,7 +117,7 @@ contract openHash {
         bytes32 hash = keccak256(abi.encode(nonce, msg.sender, gameId, h.blockHash));
 
         if (uint256(hash) > uint256(h.threshold)) {
-            uint96 oldFee = h.reward;
+            uint96 oldReward = h.reward;
             uint96 nextLiquidity = uint96(uint256(h.liquidity) * h.multiplier / 100);
             uint96 currentLiquidity = h.liquidity;
             if (nextLiquidity > h.escalationHalt) {
@@ -127,7 +127,7 @@ contract openHash {
                 h.reward = uint96(uint256(h.reward) * h.multiplier / 100);
                 h.liquidity = nextLiquidity;
             }
-            uint256 remainder = currentLiquidity - (h.reward - oldFee);
+            uint256 remainder = currentLiquidity - (h.reward - oldReward);
             uint256 protocolFee = h.protocolFee * remainder / 1e7;
             remainder = remainder - protocolFee;
 
@@ -163,8 +163,6 @@ contract openHash {
         h.reportTimestamp = uint48(currentTime);
         h.reporter = msg.sender;
         h.threshold = threshold;
-        // blockHash intentionally not refreshed: keeps any pending honest break
-        // valid against the new (lower) threshold, killing the self-replace dodge.
 
         _sendEth(previousReporter, previousBalance);
 
