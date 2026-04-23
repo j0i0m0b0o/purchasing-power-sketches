@@ -38,7 +38,7 @@ The question then is: can any mechanism produce a purchasing power signal better
 
 ## Open Questions / Comments
 - How to consume the signal?
-- How do censorship / block producer games factor in? Tightly coupled to how the signal is consumed. For example, how to manage the report very high threshold -> censor all replacements via ePBS attack
+- How do censorship / block producer games factor in? Tightly coupled to how the signal is consumed. For example, how to manage the report very high threshold -> censor all replacements via ePBS attack. It seems like the handling is the same as any other game: longer settlement windows to require the bribery of more unique economic entities. The other way is to increase the amount reporters are willing to pay to have their replacement included via increasing the reward.
 - Does griefing completely kill honest tight reporting incentives / result in an equilibrium honest threshold that is manipulable? Is there a better way to do the forced succession in this context?
 - On the other hand, nobody can know if they were griefed or someone just got lucky without enough statistical evidence
 - Manipulability is measured in the context of how the signal is consumed
