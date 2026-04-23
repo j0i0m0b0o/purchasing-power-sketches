@@ -10,6 +10,22 @@ A reporter can also be replaced during the breaking game if someone posts a suff
 
 The game ends when the timer expires. The surviving reporter earns the reward.
 
+## openHashClaim.sol
+
+The claim version is similar, except it adds some new dynamics: a breaker can claim a reported threshold and get exclusive access to breaking it, but they must wager some amount. After they claim, the reporter is required to provide a seed which kicks off the break window. After a claim, the game is guaranteed to go to the next round. 
+
+If the reporter does not provide a seed in time, the economics are the same as a break.
+
+If the breaker does not provide a valid nonce in time, the incumbent reporter gets their liquidity back and the breaker's wager seeds the next round.
+
+This design is much less elegant than the simple version. The attack surface is larger because the game has more moves. It does reduce threshold distortion purely from mining participation changes, if that is even a thing. In the simple version, you could imagine a miner looking at a marginally profitable break attempt. If there is a single other miner attempting to break, the miner loses money in expectation. But, they wouldn't just start mining instantly. They can wait farther into the timer to put in the work. On the other hand, a reporter that thinks there are multiple miners participating may shift the lowest threshold they are willing to post higher.
+
+It seems like the claim version might be better for large amounts where time starts to factor in. For example, if you want $10m of liquidity in the game, even all the Bitcoin miners in the world can't instantly break a marginally breakable threshold.
+
+It is not clear this design is better than the simple version. The game itself may create a market for hashing that expands the ASIC pool to where the right amout of electricity can be burned. You may not need very large games, and instead opt for many smaller games with proportionally less influence each, making the simple version better.
+
+It is also an open question as to whether reporters should be compensated for a failed break attempt in the claim model. Doing so may reduce oracle accuracy since the breaker needs to post the whole next round's reward as a wager.
+
 ## Signal
 
 Comparing the expected work implied by the winning threshold across sequential games, normalized by final round size, gives a signal about how ETH's purchasing power changed over the interval, measured against computational cost. If the winning threshold rises from one game to the next, that suggests market participants were willing to burn more real world compute to win the staked ETH, implying stronger ETH purchasing power versus compute. If it falls, that suggests weaker purchasing power.
