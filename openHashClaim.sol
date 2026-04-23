@@ -125,6 +125,7 @@ contract openHashClaim {
         if (msg.value != wager) revert InvalidInput("wrong wager");
 
         h.claimer = msg.sender;
+        h.reportTimestamp = uint48(currentTime);
 
         emit Claimed(gameId, msg.sender, wager);
     }
