@@ -36,14 +36,6 @@ The key thing to understand is this game is weird and distorted. But the distort
 
 The question then is: can any mechanism produce a purchasing power signal better than this one at scale? If so, then show it. If a better mechanism cannot be found, then this is what the universe gives us given the irreducible geometry of the problem, and we have to engineer around the weirdness.
 
-## Flatcoin
-
-If we allow the threshold mining game to influence the redemption price target in a minimal RAI-style flatcoin, drift in the expected work per unit liquidity implied by openHash can be handled by the redemption rate controller. We use openOracle to measure the flatcoin’s floating market price against ETH, and the deviation of market price from redemption target controls the redemption rate.
-
-Since we cannot explicitly measure hardware improvement or other influences on drift, the goal is to let market forces discover the carry required to de-trend the raw compute price primitive. If this works, the redemption rate simply becomes the market clearing offset to the expected drift. In the ideal world, flatcoin price variance is dominated by actual changes in the ETH-to-energy ratio.
-
-The flatcoin reserves should pay for the openHash and openOracle games that make the system possible. The overall parameterization of the flatcoin is its monetary policy, across the full control surface of the mechanism. openHash rewards, liquidity requirements, multipliers, escalation halts, and related parameters can either be fixed or scale with flatcoin size. The same is true for the openOracle parameters. May the best flatcoin win.
-
 ## Open Questions / Comments
 - How to consume the signal?
 - How do censorship / block producer games factor in? Tightly coupled to how the signal is consumed. For example, how to manage the report very high threshold -> censor all replacements via ePBS attack. It seems like the handling is the same as any other game: longer settlement windows to require the bribery of more unique economic entities. The other way is to increase the amount reporters are willing to pay to have their replacement included via increasing the reward.
