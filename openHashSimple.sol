@@ -65,7 +65,7 @@ contract openHash {
         if (msg.value != gameParams.fee) revert InvalidInput("msg.value");
         if (gameParams.multiplier <= 100) revert InvalidInput("multiplier must exceed 100");
         if (gameParams.escalationHalt <= gameParams.initialLiquidity) revert InvalidInput("escalation halt must exceed initial liquidity");
-        if (gameParams.replacementDecay >= 10000) revert InvalidInput("replacement decay must be below 10000");
+        if (gameParams.replacementDecay >= 10000 || gameParams.replacementDecay == 0) revert InvalidInput("replacement decay invalid");
         if (gameParams.initialLiquidity < gameParams.fee * (gameParams.multiplier - 100) / 100) revert InvalidInput("liquidity must cover fee delta");
         if (gameParams.protocolFee > 1e7) revert InvalidInput("protocol fee too high");
         if (uint256(gameParams.escalationHalt) * gameParams.multiplier / 100 > type(uint96).max) revert InvalidInput("liquidity would overflow");
