@@ -27,5 +27,6 @@ The question then is: can any mechanism produce a purchasing power signal better
 - On the other hand, nobody can know if they were griefed or someone just got lucky without enough statistical evidence
 - Manipulability is measured in the context of how the signal is consumed
 - It is possible to design an openHashBTC variant that uses ASIC-compatible double sha. Can we set up a Stratum pool and just pay Bitcoin miners to help break reports? Does this just become some kind of ETH vs BTC hash price oracle?
+- Perhaps it is a good idea to have a minimum initial threshold gap versus uint256 maximum.
 
 Overall, the purpose of this mechanism is not a perfect CPI oracle. We just want at least some tendril of reality, however messy, around which we can engineer.
