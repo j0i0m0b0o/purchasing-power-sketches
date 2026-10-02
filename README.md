@@ -32,7 +32,7 @@ Comparing the expected work implied by the winning threshold across sequential g
 
 This does not measure purchasing power in a universal sense. Computational cost is at least anchored to physical reality, which may make it more stable than measuring against another token.
 
-The key thing to understand is this game is weird and distorted. But the distortions and weirdness are ~scale-invariant. When nearly all the rest of crypto mechanism design breaks down under the weight of its own incentives at scale, scale-invariant weirdness is a very nice property.
+The key thing to understand is this game is weird and distorted. But the distortions and weirdness are ~scale-invariant in the efficient market limit. When nearly all the rest of crypto mechanism design breaks down under the weight of its own incentives at scale, scale-invariant weirdness is a very nice property.
 
 The question then is: can any mechanism produce a purchasing power signal better than this one at scale? If so, then show it. If a better mechanism cannot be found, then this is what the universe gives us given the irreducible geometry of the problem, and we have to engineer around the weirdness.
 
