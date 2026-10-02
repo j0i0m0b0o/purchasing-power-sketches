@@ -281,7 +281,11 @@ contract openHashClaim {
         uint256 currentTime = h.timeType ? block.timestamp : block.number;
         if (currentTime > h.settlementTime + h.reportTimestamp) revert InvalidInput("break time over");
 
-        if (uint256(threshold) >= h.replacementDecay * (uint256(h.threshold) / 10000)) revert InvalidInput("minimum replacement increment");
+        uint256 oldGap = type(uint256).max - uint256(h.threshold);
+        uint256 newGap = type(uint256).max - uint256(threshold);
+        if (newGap < oldGap / h.replacementDecay * 10000) revert InvalidInput("minimum replacement increment");
+        if (newGap <= oldGap) revert InvalidInput("newGap <= oldGap");
+
         if (msg.value != h.liquidity) revert InvalidInput("msg.value wrong");
 
         address payable previousReporter = payable(h.reporter);
