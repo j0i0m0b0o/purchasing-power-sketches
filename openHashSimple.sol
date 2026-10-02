@@ -5,7 +5,7 @@ pragma solidity 0.8.28;
  * @title openHash
  * @notice A trust-minimized hash price oracle. It is a minimal reality-coupled game where the weirdness and distortions are ~ scale-invariant unlike many other oracle designs.
  * @dev This contract enables hash price discovery through economic incentives.
- *      Intended use is to compare the final surviving threshold, normalized by liquidity, across two games with otherwise equivalent GameParams.
+ *      Intended use is to compare implied work from the final surviving threshold, normalized by liquidity, across two games with otherwise equivalent GameParams.
  *      Participants are responsible for validating game instance parameters before participation
  *      and unsafe parameter sets including but not limited to settlementTime too high
  *      will result in lost funds.
@@ -154,7 +154,11 @@ contract openHash {
         uint256 currentTime = h.timeType ? block.timestamp : block.number;
         if (currentTime > h.settlementTime + h.reportTimestamp) revert InvalidInput("break time over");
 
-        if (uint256(threshold) >= h.replacementDecay * (uint256(h.threshold) / 10000)) revert InvalidInput("minimum replacement increment");
+        uint256 oldGap = type(uint256).max - uint256(h.threshold);
+        uint256 newGap = type(uint256).max - uint256(threshold);
+        if (newGap < oldGap / h.replacementDecay * 10000) revert InvalidInput("minimum replacement increment");
+        if (newGap <= oldGap) revert InvalidInput("newGap <= oldGap");
+
         if (msg.value != h.liquidity) revert InvalidInput("msg.value wrong");
 
         address payable previousReporter = payable(h.reporter);
