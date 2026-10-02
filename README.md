@@ -18,7 +18,7 @@ If the reporter does not provide a seed in time, the economics are the same as a
 
 If the breaker does not provide a valid nonce in time, the incumbent reporter gets their liquidity back and the breaker's wager seeds the next round.
 
-This design is much less elegant than the simple version. The attack surface is larger because the game has more moves. It does reduce threshold distortion purely from mining participation changes, if that is even a thing. In the simple version, you could imagine a miner looking at a marginally profitable break attempt. If there is a single other miner attempting to break, the miner loses money in expectation. But, they wouldn't just start mining instantly. They can wait farther into the timer to put in the work. On the other hand, a reporter that thinks there are multiple miners participating may shift the lowest threshold they are willing to post higher.
+This design is much less elegant than the simple version. The attack surface is larger because the game has more moves.
 
 It seems like the claim version might be better for large amounts where time starts to factor in. For example, if you want $10m of liquidity in the game, even all the Bitcoin miners in the world can't instantly break a marginally breakable threshold.
 
