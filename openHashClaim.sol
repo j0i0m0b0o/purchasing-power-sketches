@@ -180,9 +180,10 @@ contract openHashClaim {
         h.claimer = address(0);
 
         tempHolding[h.protocolFeeRecipient] += protocolFee;
+        emit ReportBroken(gameId, claimer, h.liquidity, h.reward);
+
         _sendEth(claimer, remainder);
 
-        emit ReportBroken(gameId, claimer, h.liquidity, h.reward);
     }
 
     function disproveClaim(uint256 gameId) external {
@@ -221,10 +222,10 @@ contract openHashClaim {
         h.claimer = address(0);
 
         if (protocolExcess > 0) tempHolding[h.protocolFeeRecipient] += protocolExcess;
+        emit NewRound(gameId, previousReporter, h.liquidity, h.reward);
 
         _sendEth(previousReporter, previousBalance);
 
-        emit NewRound(gameId, previousReporter, h.liquidity, h.reward);
     }
 
     function breakReporter(uint256 gameId, uint256 nonce) external {
@@ -264,9 +265,10 @@ contract openHashClaim {
             h.claimer = address(0);
 
             tempHolding[h.protocolFeeRecipient] += protocolFee;
+            emit ReportBroken(gameId, msg.sender, h.liquidity, h.reward);
+
             _sendEth(payable(msg.sender), remainder);
 
-            emit ReportBroken(gameId, msg.sender, h.liquidity, h.reward);
         } else {
             revert InvalidInput("hash below threshold");
         }

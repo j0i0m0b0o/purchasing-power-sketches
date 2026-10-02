@@ -138,9 +138,10 @@ contract openHash {
             h.blockHash = bytes32(0);
 
             tempHolding[h.protocolFeeRecipient] += protocolFee;
-            _sendEth(payable(msg.sender), remainder);
 
             emit ReportBroken(gameId, msg.sender, h.liquidity, h.reward);
+            _sendEth(payable(msg.sender), remainder);
+
         } else {
             revert InvalidInput("hash below threshold");
         }
